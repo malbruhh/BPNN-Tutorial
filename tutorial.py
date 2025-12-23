@@ -11,20 +11,40 @@ import csv
 # size of weight will be determined by using the size from layer forward.
 
 #this activation function will use for converting to 0-1 value
+#derivative = how much to adjust weight during backpropagation
 def sigmoid(x):
     return 1 / (1+ np.exp(-x))
+
+def derivative_sigmoid(x):
+    return x * (1 - x)
 class NeuralNetwork:
     def __init__(self, inp, exp):
         self.input = inp
-        self.exp = exp
+        self.exp = exp.reshape(-1,1)
         self.weight1 = np.random.rand(4,4) #in matrices form
         self.weight2 = np.random.rand(4,1) #in matrices form
+        self.alpha = 0.01
         
     def feedforward(self):
         self.hidden = sigmoid(np.dot(self.input, self.weight1)) #multiply with w1 matrices
         self.output = sigmoid(np.dot(self.hidden, self.weight2)) #multiple with w2 matrices
         print(self.output)
+        
+    def backpropagation(self):
+        error = self.exp - self.output #this is simple, we need to use advanced (MSE)
 
+        #1 change hidden weight first
+        # matrices.T = transpose = swap row and column
+        delta_output = error * derivative_sigmoid(self.output) #tells the machine how much weight to adjust
+        adjust_weight2 = self.alpha * np.dot(self.hidden.T, delta_output)
+        
+        #adjust input weight using chain rule(input weight is determined by delta_output and hidden weight)
+        delta_input = derivative_sigmoid(self.hidden) * np.dot(delta_output, self.weight2.T)
+        adjust_weight1 = self.alpha * np.dot(self.input.T, delta_input)
+        
+        self.weight1 += adjust_weight1
+        self.weight2 += adjust_weight2
+        
 #data will be seperated into 2 set:
 #[Train] and [Test]
 def main():
@@ -67,6 +87,7 @@ def main():
     
     nn = NeuralNetwork(input_train,expected_train)
     nn.feedforward()
+    nn.backpropagation()
 
 if __name__ == '__main__':
     main()
