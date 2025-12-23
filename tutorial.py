@@ -10,6 +10,11 @@ import csv
 # Supposed matrices size : AxB * YxZ, the size will be A*Z
 # size of weight will be determined by using the size from layer forward.
 
+# variables:
+# learning rate: too small= slow; too big = jumps way too much
+# threshold = accuracy to determine stability ; system need > 70% accuracy to consider stable
+# epoch = 1 epoch : 1 iteration every input.
+
 #this activation function will use for converting to 0-1 value
 #derivative = how much to adjust weight during backpropagation
 def sigmoid(x):
@@ -20,7 +25,8 @@ def derivative_sigmoid(x):
 class NeuralNetwork:
     def __init__(self, inp, exp):
         self.input = inp
-        self.exp = exp.reshape(-1,1)
+        # self.exp = exp.reshape(-1,1)
+        self.exp = exp
         self.weight1 = np.random.rand(4,4) #in matrices form
         self.weight2 = np.random.rand(4,1) #in matrices form
         self.alpha = 0.01
@@ -64,7 +70,7 @@ def main():
     for line in lines:
         line = line.split(',')
         input.append([float(x) for x in line[0:4]]) #insert into input data
-        expected.append(float(line[4]))
+        expected.append([float(line[4])])
 
     #convert into numpy array to use other numpy func
     input = np.array(input)
@@ -86,8 +92,28 @@ def main():
     expected_test = expected[1100:]
     
     nn = NeuralNetwork(input_train,expected_train)
+    
+    
+    for epoch in range(100):
+        
+        nn.feedforward()
+        nn.backpropagation()
+        
+        
+    #testing: feedforward only, no backpropagate
+    nn.input = input_test
     nn.feedforward()
-    nn.backpropagation()
-
+    
+    threshold = 0.1 # Standardized output to only receive 0.1 as correct
+    result= np.abs(nn.output - expected_test) # Distance from the truth
+    
+    #take the matrices and find less than threshold, create new list
+    correct  = result[result <= threshold].size
+    incorrect = result[result > threshold].size
+    
+    print("correct : " , correct)
+    print("incorrect : " , incorrect)
+    print(np.round(correct/(correct + incorrect) * 100, 2), '%')
+    #seperate to avoid overwriting actual training data
 if __name__ == '__main__':
     main()
